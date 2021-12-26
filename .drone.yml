@@ -1,0 +1,28 @@
+kind: pipeline
+
+clone:
+  depth: 1
+
+steps:
+- name: build
+  image: archlinux:base-devel
+  environment:
+    LTO:
+      from_secret: LTO
+    TELEGRAM_TOKEN:
+      from_secret: TELEGRAM_TOKEN
+    TELEGRAM_CHAT:
+      from_secret: TELEGRAM_CHAT
+  commands:
+  - curl -fsSL https://repo.archlinuxcn.org/x86_64/glibc-linux4-2.33-5-x86_64.pkg.tar.zst | bsdtar -C / -xvf - &>/dev/null
+  - pacman -Syu --needed --noconfirm bc git jre-openjdk-headless jq openssh python repo rsync zip &>/dev/null
+  - git config --global user.name "Pranaya Deomani"
+  - git config --global user.email "pranayadeomani@protonmail.com"
+  - git config --global color.ui auto
+  - repo init -u https://github.com/pranaya2005-workspace/kernel_manifest.git -b android-12.0 --depth=1 &>/dev/null
+  - repo sync -j $(nproc --all) &>/dev/null
+  - ./build.sh
+
+trigger:
+  event:
+  - custom
